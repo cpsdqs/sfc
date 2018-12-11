@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate log;
 
+use wlroots::extensions::server_decoration::ServerDecorationMode;
 use wlroots::{CompositorBuilder, Seat};
 
 pub mod event;
@@ -11,6 +12,7 @@ pub mod renderer;
 pub mod seat_manager;
 pub mod server;
 pub mod shell;
+pub mod space;
 pub mod spring;
 pub mod status;
 pub mod utils;
@@ -47,6 +49,13 @@ fn main() {
         .output_manager(Box::new(OutputManager::new()))
         .xdg_shell_v6_manager(Box::new(XdgV6ShellManager::new()))
         .build_auto(Server::new());
+
+    compositor
+        .server_decoration_manager
+        .as_mut()
+        .unwrap()
+        .set_default_mode(ServerDecorationMode::Server);
+
     let seat = Seat::create(
         &mut compositor,
         "seat0".into(),

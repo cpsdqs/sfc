@@ -3,6 +3,35 @@ use crate::view::View;
 use std::rc::Rc;
 use wlroots::*;
 
+/// Why does this exist? Because for some reason XdgV6TopLevel.app_id() panics
+/// when the app id string is invalid instead of simply returning an error
+fn obtain_app_id_safely_unsafely(top_level: &XdgV6TopLevel) -> String {
+    unsafe {
+        use wlroots::wlroots_sys::{wlr_xdg_surface_v6, wlr_xdg_toplevel_v6};
+        use std::mem;
+        use std::ffi::CStr;
+
+        // horrible hack that relies on deterministic struct layout
+        #[derive(Debug, Eq, PartialEq, Hash)]
+        struct HorribleHack {
+            _shell_surface: *mut wlr_xdg_surface_v6,
+            toplevel: *mut wlr_xdg_toplevel_v6,
+        }
+
+        let hh = mem::transmute_copy::<_, HorribleHack>(top_level);
+
+        if (*hh.toplevel).app_id.is_null() {
+            return String::from("???");
+        }
+        let cstr = CStr::from_ptr((*hh.toplevel).app_id);
+
+        match cstr.to_str() {
+            Ok(s) => String::from(s),
+            Err(_) => String::from("???"),
+        }
+    }
+}
+
 pub struct XdgV6Shell {
     surface: XdgV6ShellSurfaceHandle,
 }
@@ -14,29 +43,30 @@ impl XdgV6Shell {
 }
 
 impl XdgV6ShellHandler for XdgV6Shell {
-    #[wlroots_dehandle(compositor)]
+    #[wlroots_dehandle(compositor, surface)]
     fn map_request(
         &mut self,
         compositor_handle: CompositorHandle,
         _: SurfaceHandle,
-        surface: XdgV6ShellSurfaceHandle,
+        surface_handle: XdgV6ShellSurfaceHandle,
     ) {
         use compositor_handle as compositor;
 
-        let is_toplevel = with_handles!([(shell_surface: {&surface})] => {
-            match shell_surface.state().unwrap() {
-                XdgV6ShellState::TopLevel(_) => true,
-                _ => false,
+        let app_id = {
+            use surface_handle as surface;
+
+            match surface.state().unwrap() {
+                XdgV6ShellState::TopLevel(top_level) => Some(obtain_app_id_safely_unsafely(top_level)),
+                _ => None,
             }
-        })
-        .unwrap();
-
-        let server: &mut Server = compositor.data.downcast_mut().unwrap();
-
-        if is_toplevel {
-            let view = Rc::new(View::new(surface));
-            server.views.push(view);
         };
+
+        if let Some(app_id) = app_id {
+            let server: &mut Server = compositor.data.downcast_mut().unwrap();
+
+            let view = Rc::new(View::new(surface_handle));
+            server.add_view(app_id, view);
+        }
     }
 
     #[wlroots_dehandle(compositor)]
@@ -50,11 +80,7 @@ impl XdgV6ShellHandler for XdgV6Shell {
 
         let server: &mut Server = compositor.data.downcast_mut().unwrap();
 
-        if let Some(pos) = server.views.iter().position(|x| x.shell == surface) {
-            server.views.remove(pos);
-        } else {
-            error!("Received an unmap request but the surface couldn’t be found");
-        };
+        server.remove_view_for_surface(surface);
     }
 }
 

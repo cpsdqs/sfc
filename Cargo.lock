@@ -577,7 +577,6 @@ dependencies = [
  "lazy_static 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
- "wayland-server 0.21.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "wlroots 0.0.0 (git+https://github.com/swaywm/wlroots-rs?rev=3c25b54)",
 ]
 

@@ -9,3 +9,4 @@ A Wayland compositor for the Surface Pro.
 
 ### Running
 Simply clone this repository and run `cargo run`.
+To exit, press ⌃⌥⇧⎋.

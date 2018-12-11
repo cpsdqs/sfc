@@ -15,6 +15,5 @@ log = "0.4"
 gl = { path = "gl" }
 time = "0.1"
 wlroots = { git = "https://github.com/swaywm/wlroots-rs", rev = "3c25b54" }
-wayland-server = "0.21"
 
 [workspace]

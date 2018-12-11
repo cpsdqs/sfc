@@ -1,6 +1,6 @@
 use crate::status::StatusIndicator;
 use crate::utils::rounded_rect;
-use cairo::{Context, LineJoin, LineCap, Operator};
+use cairo::{Context, LineCap, LineJoin, Operator};
 use core::f64::consts::PI;
 use std::collections::HashMap;
 use std::fs::File;
@@ -57,14 +57,7 @@ impl StatusIndicator for BatteryIndicator {
                 } else {
                     ctx.set_source_rgba(1., 1., 1., 1.);
                 }
-                rounded_rect(
-                    ctx,
-                    2.,
-                    2.,
-                    width,
-                    8.,
-                    1.,
-                );
+                rounded_rect(ctx, 2., 2., width, 8., 1.);
                 ctx.fill();
 
                 macro_rules! lightning_icon {
@@ -76,7 +69,7 @@ impl StatusIndicator for BatteryIndicator {
                         ctx.line_to(14., 5.);
                         ctx.line_to(11., 5.);
                         ctx.close_path();
-                    }
+                    };
                 }
 
                 if status.charging {
