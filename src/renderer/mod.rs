@@ -41,7 +41,7 @@ impl Renderer {
         self.resolution
     }
 
-    pub fn handle_event(&mut self, mut event: Event, _server: &mut Server) {
+    pub fn map_event(&self, event: &mut Event) {
         match event {
             Event::TouchDown(_, ref mut pos) | Event::TouchMotion(_, ref mut pos) => {
                 pos.x *= self.width;
@@ -71,7 +71,10 @@ impl Renderer {
     ) {
         let space_order: Vec<_> = server.space_order().iter().map(|x| *x).collect();
         for space_id in space_order.iter().rev() {
-            server.space_mut(*space_id).unwrap().render(matrix, self, renderer);
+            server
+                .space_mut(*space_id)
+                .unwrap()
+                .render(matrix, self, renderer);
         }
     }
 }

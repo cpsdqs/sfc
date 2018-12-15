@@ -1,3 +1,4 @@
+use crate::server::Server;
 use wlroots::*;
 
 pub struct SeatManager {}
@@ -9,12 +10,28 @@ impl SeatManager {
 }
 
 impl SeatHandler for SeatManager {
-    fn pointer_grabbed(&mut self, _: CompositorHandle, _: SeatHandle, _: &PointerGrab) {
-        info!("Pointer grabbed!");
+    #[wlroots_dehandle(compositor)]
+    fn pointer_grabbed(
+        &mut self,
+        compositor_handle: CompositorHandle,
+        _: SeatHandle,
+        _: &PointerGrab,
+    ) {
+        use compositor_handle as compositor;
+        let server: &mut Server = compositor.data.downcast_mut().unwrap();
+        server.pointer_grabbed = true;
     }
 
-    fn pointer_released(&mut self, _: CompositorHandle, _: SeatHandle, _: &PointerGrab) {
-        info!("Pointer released!");
+    #[wlroots_dehandle(compositor)]
+    fn pointer_released(
+        &mut self,
+        compositor_handle: CompositorHandle,
+        _: SeatHandle,
+        _: &PointerGrab,
+    ) {
+        use compositor_handle as compositor;
+        let server: &mut Server = compositor.data.downcast_mut().unwrap();
+        server.pointer_grabbed = false;
     }
 
     fn keyboard_grabbed(&mut self, _: CompositorHandle, _: SeatHandle, _: &KeyboardGrab) {
@@ -25,11 +42,22 @@ impl SeatHandler for SeatManager {
         info!("Keyboard released!");
     }
 
-    fn touch_grabbed(&mut self, _: CompositorHandle, _: SeatHandle, _: &TouchGrab) {
-        info!("Touch grabbed!");
+    #[wlroots_dehandle(compositor)]
+    fn touch_grabbed(&mut self, compositor_handle: CompositorHandle, _: SeatHandle, _: &TouchGrab) {
+        use compositor_handle as compositor;
+        let server: &mut Server = compositor.data.downcast_mut().unwrap();
+        server.touch_grabbed = true;
     }
 
-    fn touch_released(&mut self, _: CompositorHandle, _: SeatHandle, _: &TouchGrab) {
-        info!("Touch released!");
+    #[wlroots_dehandle(compositor)]
+    fn touch_released(
+        &mut self,
+        compositor_handle: CompositorHandle,
+        _: SeatHandle,
+        _: &TouchGrab,
+    ) {
+        use compositor_handle as compositor;
+        let server: &mut Server = compositor.data.downcast_mut().unwrap();
+        server.touch_grabbed = false;
     }
 }

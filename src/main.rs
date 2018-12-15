@@ -4,6 +4,7 @@ extern crate log;
 use wlroots::extensions::server_decoration::ServerDecorationMode;
 use wlroots::{CompositorBuilder, Seat};
 
+pub mod dock;
 pub mod event;
 pub mod input_manager;
 pub mod output_handler;

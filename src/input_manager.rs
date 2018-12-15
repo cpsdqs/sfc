@@ -23,29 +23,57 @@ impl InputManagerHandler for InputManager {
         info!("Input added! {:?}", dev.dev_type());
     }
 
+    #[wlroots_dehandle(compositor)]
     fn keyboard_added(
         &mut self,
-        _: CompositorHandle,
+        compositor_handle: CompositorHandle,
         _: KeyboardHandle,
     ) -> Option<Box<KeyboardHandler>> {
         info!("Keyboard added!");
+
+        {
+            use compositor_handle as compositor;
+            let server: &mut Server = compositor.data.downcast_mut().unwrap();
+            server.keyboard_added();
+        }
+
         Some(Box::new(SfKeyboardHandler {
             ctrl_alt_pressed: false,
             ctrl_shift_opt_pressed: false,
         }))
     }
 
+    #[wlroots_dehandle(compositor)]
     fn pointer_added(
         &mut self,
-        _: CompositorHandle,
+        compositor_handle: CompositorHandle,
         _: PointerHandle,
     ) -> Option<Box<PointerHandler>> {
         info!("Pointer added!");
+
+        {
+            use compositor_handle as compositor;
+            let server: &mut Server = compositor.data.downcast_mut().unwrap();
+            server.pointer_added();
+        }
+
         Some(Box::new(SfPointerHandler))
     }
 
-    fn touch_added(&mut self, _: CompositorHandle, _: TouchHandle) -> Option<Box<TouchHandler>> {
+    #[wlroots_dehandle(compositor)]
+    fn touch_added(
+        &mut self,
+        compositor_handle: CompositorHandle,
+        _: TouchHandle,
+    ) -> Option<Box<TouchHandler>> {
         info!("Touch added!");
+
+        {
+            use compositor_handle as compositor;
+            let server: &mut Server = compositor.data.downcast_mut().unwrap();
+            server.touch_added();
+        }
+
         Some(Box::new(SfTouchHandler))
     }
 

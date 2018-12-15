@@ -1,11 +1,10 @@
-use wlroots::XdgV6ShellSurfaceHandle;
-use std::rc::Rc;
-use crate::view::View;
-use crate::space::Space;
 use crate::event::Event;
 use crate::renderer::Renderer;
-use wlroots::SeatHandle;
+use crate::space::Space;
+use crate::view::View;
 use std::collections::HashMap;
+use std::rc::Rc;
+use wlroots::{wlroots_dehandle, Capability, SeatHandle, XdgV6ShellSurfaceHandle};
 
 pub type SpaceID = u64;
 
@@ -17,6 +16,11 @@ pub struct Server {
     app_id_mapping: HashMap<String, SpaceID>,
     pub seat: SeatHandle,
     pub renderer: Option<Renderer>,
+    keyboards: usize,
+    pointers: usize,
+    touch: usize,
+    pub pointer_grabbed: bool,
+    pub touch_grabbed: bool,
 }
 
 impl Server {
@@ -28,7 +32,60 @@ impl Server {
             app_id_mapping: HashMap::new(),
             seat: SeatHandle::default(),
             renderer: None,
+            keyboards: 0,
+            pointers: 0,
+            touch: 0,
+            pointer_grabbed: false,
+            touch_grabbed: false,
         }
+    }
+
+    #[wlroots_dehandle(seat)]
+    fn update_capabilities(&mut self) {
+        let mut caps = Capability::empty();
+        if self.keyboards > 0 {
+            caps |= Capability::Keyboard;
+        }
+        if self.pointers > 0 {
+            caps |= Capability::Pointer;
+        }
+        if self.touch > 0 {
+            caps |= Capability::Touch;
+        }
+
+        let seat_h = &self.seat;
+        use seat_h as seat;
+        seat.set_capabilities(caps);
+    }
+
+    pub fn keyboard_added(&mut self) {
+        self.keyboards += 1;
+        self.update_capabilities();
+    }
+
+    pub fn keyboard_removed(&mut self) {
+        self.keyboards -= 1;
+        self.update_capabilities();
+    }
+
+    pub fn pointer_added(&mut self) {
+        self.pointers += 1;
+        self.update_capabilities();
+    }
+
+    pub fn pointer_removed(&mut self) {
+        self.pointers -= 1;
+        self.update_capabilities();
+    }
+
+    pub fn touch_added(&mut self) {
+        self.touch += 1;
+        self.update_capabilities();
+    }
+
+    pub fn touch_removed(&mut self) {
+        self.touch -= 1;
+        self.update_capabilities();
     }
 
     fn add_space(&mut self) -> SpaceID {
@@ -72,12 +129,19 @@ impl Server {
         &*self.space_order
     }
 
-    pub fn handle_event(&mut self, event: Event) {
+    pub fn handle_event(&mut self, mut event: Event) {
         if self.renderer.is_none() {
             warn!("No renderer, ignoring event");
         }
-        let mut renderer = self.renderer.take().unwrap();
-        renderer.handle_event(event, self);
+
+        let renderer = self.renderer.take().unwrap();
+        renderer.map_event(&mut event);
         self.renderer = Some(renderer);
+
+        if let Some(top_space_id) = self.space_order.last().map(|x| *x) {
+            let mut space = self.spaces.remove(&top_space_id).unwrap();
+            space.handle_event(event, self);
+            self.spaces.insert(top_space_id, space);
+        }
     }
 }

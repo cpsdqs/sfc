@@ -7,9 +7,9 @@ use wlroots::*;
 /// when the app id string is invalid instead of simply returning an error
 fn obtain_app_id_safely_unsafely(top_level: &XdgV6TopLevel) -> String {
     unsafe {
-        use wlroots::wlroots_sys::{wlr_xdg_surface_v6, wlr_xdg_toplevel_v6};
-        use std::mem;
         use std::ffi::CStr;
+        use std::mem;
+        use wlroots::wlroots_sys::{wlr_xdg_surface_v6, wlr_xdg_toplevel_v6};
 
         // horrible hack that relies on deterministic struct layout
         #[derive(Debug, Eq, PartialEq, Hash)]
@@ -56,7 +56,9 @@ impl XdgV6ShellHandler for XdgV6Shell {
             use surface_handle as surface;
 
             match surface.state().unwrap() {
-                XdgV6ShellState::TopLevel(top_level) => Some(obtain_app_id_safely_unsafely(top_level)),
+                XdgV6ShellState::TopLevel(top_level) => {
+                    Some(obtain_app_id_safely_unsafely(top_level))
+                }
                 _ => None,
             }
         };

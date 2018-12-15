@@ -19,3 +19,30 @@ pub enum Event<'a> {
     TabletTip(&'a tool::TipEvent),
     TabletButton(&'a tool::ButtonEvent),
 }
+
+impl Event<'_> {
+    pub fn is_pointer_event(&self) -> bool {
+        match self {
+            Event::PointerButton(..)
+            | Event::PointerMotion(..)
+            | Event::PointerAbsMotion(..)
+            | Event::PointerAxis(..)
+            | Event::TouchDown(..)
+            | Event::TouchUp(..)
+            | Event::TouchMotion(..)
+            | Event::TouchCancel(..)
+            | Event::TabletAxis(..)
+            | Event::TabletProximity(..)
+            | Event::TabletTip(..)
+            | Event::TabletButton(..) => true,
+            Event::Key(..) => false,
+        }
+    }
+
+    pub fn location(&self) -> Option<Vector2<f64>> {
+        match self {
+            Event::TouchDown(_, v) | Event::TouchMotion(_, v) => Some(*v),
+            _ => None,
+        }
+    }
+}
