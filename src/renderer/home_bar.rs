@@ -88,15 +88,15 @@ impl HomeBar {
 
     pub fn handle_event(&mut self, event: Event) {
         match event {
-            Event::TouchDown(_, pos) => {
-                self.touch_down_offset = self.map_touch_y(pos.y) - self.y_pos.spring.value;
+            Event::TouchDown { location, .. } => {
+                self.touch_down_offset = self.map_touch_y(location.y) - self.y_pos.spring.value;
                 self.y_pos.spring.velocity = 0.;
                 self.prev_touch_time = Instant::now();
                 self.touch_down = true;
             }
-            Event::TouchMotion(_, pos) => {
+            Event::TouchMotion { location, .. } => {
                 let prev_value = self.y_pos.spring.value;
-                self.y_pos.spring.value = self.map_touch_y(pos.y) - self.touch_down_offset;
+                self.y_pos.spring.value = self.map_touch_y(location.y) - self.touch_down_offset;
 
                 let delta = self.y_pos.spring.value - prev_value;
                 let elapsed = self.prev_touch_time.elapsed();
@@ -104,7 +104,7 @@ impl HomeBar {
                 self.prev_touch_time = Instant::now();
                 self.y_pos.spring.velocity = delta / elapsed_secs;
             }
-            Event::TouchUp(_) => {
+            Event::TouchUp { .. } => {
                 self.touch_down = false;
             }
             _ => (),

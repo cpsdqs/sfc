@@ -10,6 +10,7 @@ pub mod input_manager;
 pub mod output_handler;
 pub mod output_manager;
 pub mod renderer;
+pub mod seat;
 pub mod seat_manager;
 pub mod server;
 pub mod shell;

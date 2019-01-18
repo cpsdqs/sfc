@@ -4,6 +4,7 @@ use cairo_sys::{cairo_image_surface_create, cairo_image_surface_get_data, enums:
 use cgmath::Matrix4;
 use gl::GLTexture2D;
 
+/// A cairo context that renders into an OpenGL texture.
 #[derive(Debug)]
 pub struct CairoTex {
     texture: GLTexture2D,
@@ -17,6 +18,7 @@ pub struct CairoTex {
 }
 
 impl CairoTex {
+    /// Creates a new CairoText with a width, a height, and a scaling factor.
     pub fn new(width: f64, height: f64, resolution: f64) -> CairoTex {
         let texture = unsafe { GLTexture2D::new() };
         unsafe {
@@ -48,18 +50,22 @@ impl CairoTex {
         }
     }
 
+    /// Returns the unscaled context size.
     pub fn size(&self) -> (f64, f64) {
         (self.width, self.height)
     }
 
+    /// Returns the scaling factor.
     pub fn resolution(&self) -> f64 {
         self.resolution
     }
 
+    /// Returns the cairo context.
     pub fn context(&self) -> &Context {
         &self.context
     }
 
+    /// Clears the context and applies the scaling factor.
     pub fn clear(&self) {
         self.context.identity_matrix();
         self.context.scale(self.resolution, self.resolution);
@@ -69,6 +75,7 @@ impl CairoTex {
         self.context.set_operator(Operator::Over);
     }
 
+    /// Copies the pixels into the OpenGL texture.
     pub fn commit(&self) {
         unsafe {
             let tex_data = cairo_image_surface_get_data(self.surface.to_raw_none());
@@ -78,6 +85,7 @@ impl CairoTex {
         }
     }
 
+    /// Renders the OpenGL texture with the given projection matrix and location.
     pub fn render(&self, matrix: Matrix4<f32>, x: f64, y: f64, scale: f64) {
         unsafe {
             self.texture.activate(0);

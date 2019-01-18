@@ -42,12 +42,9 @@ impl Renderer {
     }
 
     pub fn map_event(&self, event: &mut Event) {
-        match event {
-            Event::TouchDown(_, ref mut pos) | Event::TouchMotion(_, ref mut pos) => {
-                pos.x *= self.width;
-                pos.y *= self.height;
-            }
-            _ => (),
+        if let Some(location) = event.location_mut() {
+            location.x *= self.width;
+            location.y *= self.height;
         }
     }
 

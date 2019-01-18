@@ -1,4 +1,4 @@
-use crate::event::Event;
+use crate::event::{Event, RawEvent};
 use crate::renderer::Renderer;
 use crate::space::Space;
 use crate::view::View;
@@ -129,12 +129,13 @@ impl Server {
         &*self.space_order
     }
 
-    pub fn handle_event(&mut self, mut event: Event) {
+    pub fn handle_event(&mut self, event: RawEvent) {
         if self.renderer.is_none() {
             warn!("No renderer, ignoring event");
         }
 
         let renderer = self.renderer.take().unwrap();
+        let mut event = event.into();
         renderer.map_event(&mut event);
         self.renderer = Some(renderer);
 

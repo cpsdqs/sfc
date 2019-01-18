@@ -17,7 +17,7 @@ impl OutputHandler for SfOutputHandler {
         use compositor_handle as compositor;
         use output_handle as output;
 
-        // TODO: get this data somehow?
+        // TODO: handle on_scale_change
         output.set_scale(2.);
 
         let server: &mut Server = compositor.data.downcast_mut().unwrap();

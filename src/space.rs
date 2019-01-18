@@ -1,3 +1,4 @@
+use wlroots::{WLR_BUTTON_PRESSED, WLR_BUTTON_RELEASED};
 use crate::event::Event;
 use crate::renderer::HomeBar;
 use crate::renderer::Renderer;
@@ -64,20 +65,20 @@ impl Space {
     pub fn handle_event(&mut self, event: Event, server: &mut Server) {
         if let Some(ref mut home_bar) = self.home_bar {
             match event {
-                Event::TouchDown(_, pos) => {
-                    if home_bar.should_capture_event(pos.x, pos.y) {
+                Event::TouchDown { location, .. } => {
+                    if home_bar.should_capture_event(location.x, location.y) {
                         self.home_bar_captured_events = true;
                         home_bar.handle_event(event);
                         return;
                     }
                 }
-                Event::TouchMotion(..) => {
+                Event::TouchMotion { .. } => {
                     if self.home_bar_captured_events {
                         home_bar.handle_event(event);
                         return;
                     }
                 }
-                Event::TouchUp(..) => {
+                Event::TouchUp { .. } => {
                     if self.home_bar_captured_events {
                         home_bar.handle_event(event);
                         self.home_bar_captured_events = false;
@@ -131,41 +132,34 @@ impl Space {
                 let time = current_time();
 
                 match event {
-                    Event::PointerButton(event) => {
-                        seat.pointer_notify_button(time, event.button(), event.state() as u32);
+                    Event::PointerDown { button } => {
+                        seat.pointer_notify_button(time, button, WLR_BUTTON_PRESSED as u32);
                     }
-                    Event::PointerMotion(_) | Event::PointerAbsMotion(_) => {
+                    Event::PointerMotion { .. } => {
                         // TODO: seat.pointer_notify_motion(time, sx, sy);
                     }
-                    Event::PointerAxis(event) => {
+                    Event::PointerAxis { source, orientation, delta } => {
                         // FIXME: where does value_discrete come from?
                         seat.pointer_notify_axis(
                             time,
-                            event.orientation(),
-                            event.delta(),
+                            orientation,
+                            delta,
                             0,
-                            event.source(),
+                            source,
                         );
                     }
-                    Event::TouchDown(event, loc) => {
-                        let (sx, sy) = event_target.map_location(loc);
+                    Event::TouchDown { id, location } => {
+                        let (sx, sy) = event_target.map_location(location);
                         event_target.with_surface(|surf| {
-                            // FIXME: where do TouchIDs come from?
-                            let touch_id =
-                                unsafe { mem::transmute::<i32, TouchId>(event.touch_id()) };
-                            seat.touch_notify_down(surf, time, touch_id, sx, sy);
+                            seat.touch_notify_down(surf, time, id, sx, sy);
                         });
                     }
-                    Event::TouchMotion(event, loc) => {
-                        let (sx, sy) = event_target.map_location(loc);
-                        // FIXME: where do TouchIDs come from?
-                        let touch_id = unsafe { mem::transmute::<i32, TouchId>(event.touch_id()) };
-                        seat.touch_notify_motion(time, touch_id, sx, sy);
+                    Event::TouchMotion { id, location } => {
+                        let (sx, sy) = event_target.map_location(location);
+                        seat.touch_notify_motion(time, id, sx, sy);
                     }
-                    Event::TouchUp(event) => {
-                        // FIXME: where do TouchIDs come from?
-                        let touch_id = unsafe { mem::transmute::<i32, TouchId>(event.touch_id()) };
-                        seat.touch_notify_up(time, touch_id);
+                    Event::TouchUp { id } => {
+                        seat.touch_notify_up(time, id);
                     }
                     _ => warn!("Unhandled event"),
                 }

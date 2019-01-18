@@ -1,4 +1,4 @@
-use crate::event::Event;
+use crate::event::RawEvent;
 use crate::server::Server;
 use std::process::Command;
 use wlroots::key_events::*;
@@ -108,7 +108,7 @@ impl PointerHandler for SfPointerHandler {
     ) {
         use compositor_handle as compositor;
         let server: &mut Server = compositor.data.downcast_mut().unwrap();
-        server.handle_event(Event::PointerButton(event));
+        server.handle_event(RawEvent::PointerButton(event));
     }
     #[wlroots_dehandle(compositor)]
     fn on_motion(
@@ -119,7 +119,7 @@ impl PointerHandler for SfPointerHandler {
     ) {
         use compositor_handle as compositor;
         let server: &mut Server = compositor.data.downcast_mut().unwrap();
-        server.handle_event(Event::PointerMotion(event));
+        server.handle_event(RawEvent::PointerMotion(event));
     }
     #[wlroots_dehandle(compositor)]
     fn on_motion_absolute(
@@ -130,7 +130,7 @@ impl PointerHandler for SfPointerHandler {
     ) {
         use compositor_handle as compositor;
         let server: &mut Server = compositor.data.downcast_mut().unwrap();
-        server.handle_event(Event::PointerAbsMotion(event));
+        server.handle_event(RawEvent::PointerAbsMotion(event));
     }
     #[wlroots_dehandle(compositor)]
     fn on_axis(
@@ -141,7 +141,7 @@ impl PointerHandler for SfPointerHandler {
     ) {
         use compositor_handle as compositor;
         let server: &mut Server = compositor.data.downcast_mut().unwrap();
-        server.handle_event(Event::PointerAxis(event));
+        server.handle_event(RawEvent::PointerAxis(event));
     }
 }
 
@@ -182,7 +182,7 @@ impl KeyboardHandler for SfKeyboardHandler {
         }
 
         let server: &mut Server = compositor.data.downcast_mut().unwrap();
-        server.handle_event(Event::Key(event));
+        server.handle_event(RawEvent::Key(event));
     }
 }
 
@@ -194,15 +194,14 @@ impl TouchHandler for SfTouchHandler {
         use compositor_handle as compositor;
         let server: &mut Server = compositor.data.downcast_mut().unwrap();
 
-        let location = event.location();
-        server.handle_event(Event::TouchDown(event, location.into()));
+        server.handle_event(RawEvent::TouchDown(event))
     }
 
     #[wlroots_dehandle(compositor)]
     fn on_up(&mut self, compositor_handle: CompositorHandle, _: TouchHandle, event: &UpEvent) {
         use compositor_handle as compositor;
         let server: &mut Server = compositor.data.downcast_mut().unwrap();
-        server.handle_event(Event::TouchUp(event));
+        server.handle_event(RawEvent::TouchUp(event));
     }
 
     #[wlroots_dehandle(compositor)]
@@ -214,8 +213,7 @@ impl TouchHandler for SfTouchHandler {
     ) {
         use compositor_handle as compositor;
         let server: &mut Server = compositor.data.downcast_mut().unwrap();
-        let location = event.location();
-        server.handle_event(Event::TouchMotion(event, location.into()));
+        server.handle_event(RawEvent::TouchMotion(event))
     }
 
     #[wlroots_dehandle(compositor)]
@@ -227,7 +225,7 @@ impl TouchHandler for SfTouchHandler {
     ) {
         use compositor_handle as compositor;
         let server: &mut Server = compositor.data.downcast_mut().unwrap();
-        server.handle_event(Event::TouchCancel(event));
+        server.handle_event(RawEvent::TouchCancel(event));
     }
 }
 

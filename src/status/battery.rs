@@ -111,7 +111,8 @@ impl StatusIndicator for BatteryIndicator {
     }
 }
 
-const FAKEDEV_PATH: &str = "/etc/fakedev/power_supply/BAT1/uevent";
+const CAPACITY_PATH: &str = "/sys/class/power_supply/BAT1/capacity";
+const STATUS_PATH: &str = "/sys/class/power_supply/BAT1/status";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct BatteryState {
@@ -121,34 +122,22 @@ pub struct BatteryState {
     pub critical: bool,
 }
 
+fn read_file(path: &str) -> io::Result<String> {
+    let mut contents = String::new();
+    File::open(path)?.read_to_string(&mut contents)?;
+    Ok(contents)
+}
+
 pub fn battery_status() -> Result<BatteryState, io::Error> {
-    let mut file = File::open(FAKEDEV_PATH)?;
-    let mut content = String::new();
-    file.read_to_string(&mut content)?;
+    let capacity = read_file(CAPACITY_PATH)?.trim().to_string();
+    let status = read_file(STATUS_PATH)?.trim().to_string();
 
-    let mut values = HashMap::new();
+    let percentage: u8 = capacity.parse().map_err(|_| io::Error::from(io::ErrorKind::InvalidData))?;
 
-    for line in content.lines() {
-        let mut parts = line.split("=");
-        if let (Some(k), Some(v)) = (parts.next(), parts.next()) {
-            values.insert(k, v);
-        }
-    }
-
-    let percentage: u8 = match values.get("POWER_SUPPLY_CAPACITY") {
-        Some(v) => v,
-        None => return Err(io::ErrorKind::InvalidData.into()),
-    }
-    .parse()
-    .map_err(|_| io::Error::from(io::ErrorKind::InvalidData))?;
-
-    let charging = values.get("POWER_SUPPLY_STATUS") == Some(&"Charging")
-        || values.get("POWER_SUPPLY_STATUS") == Some(&"Critical (Charging)");
-    let error = values.get("POWER_SUPPLY_STATUS") == Some(&"None");
-    let critical = values
-        .get("POWER_SUPPLY_STATUS")
-        .map(|s| s.starts_with("Critical"))
-        .unwrap_or(false);
+    let charging = status == "Charging"
+        || status == "Critical (Charging)";
+    let error = status == "None";
+    let critical = status.starts_with("Critical");
 
     Ok(BatteryState {
         percentage,

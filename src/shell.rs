@@ -47,13 +47,13 @@ impl XdgV6ShellHandler for XdgV6Shell {
     fn map_request(
         &mut self,
         compositor_handle: CompositorHandle,
-        _: SurfaceHandle,
-        surface_handle: XdgV6ShellSurfaceHandle,
+        surface_handle: SurfaceHandle,
+        xdg_surface_handle: XdgV6ShellSurfaceHandle,
     ) {
         use compositor_handle as compositor;
 
         let app_id = {
-            use surface_handle as surface;
+            use xdg_surface_handle as surface;
 
             match surface.state().unwrap() {
                 XdgV6ShellState::TopLevel(top_level) => {
@@ -66,7 +66,7 @@ impl XdgV6ShellHandler for XdgV6Shell {
         if let Some(app_id) = app_id {
             let server: &mut Server = compositor.data.downcast_mut().unwrap();
 
-            let view = Rc::new(View::new(surface_handle));
+            let view = Rc::new(View::new(xdg_surface_handle));
             server.add_view(app_id, view);
         }
     }

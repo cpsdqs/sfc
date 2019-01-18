@@ -1,3 +1,5 @@
+//! Utilities for rendering textured rectangles.
+
 use cairo::Rectangle;
 use cgmath::Matrix4;
 use gl::*;
@@ -38,6 +40,10 @@ void main() {
 }
 ";
 
+/// Initializes the buffers and shaders for drawing rectangles.
+///
+/// Nothing will break when this is called twice but that’s probably not a very
+/// useful thing to do.
 pub unsafe fn init_box() {
     let box_buffer: GLBuffer<f32> = GLBuffer::new(GLBufferType::Array);
     box_buffer.bind();
@@ -57,6 +63,7 @@ pub unsafe fn init_box() {
     *TEX_SHADER.lock().unwrap() = Some(tex_shader);
 }
 
+/// Draws the rectangle, and assumes a shader was bound.
 pub unsafe fn draw_box() {
     let box_array_ref = BOX_ARRAY.lock().unwrap();
     let box_array = box_array_ref.as_ref().unwrap();
@@ -64,6 +71,9 @@ pub unsafe fn draw_box() {
     gl::draw_arrays(GLDrawMode::TriangleStrip, 4);
 }
 
+/// Draws the rectangle with the texture shader, a projection matrix, and dimensions.
+///
+/// The texture should be bound to `TEXTURE0`.
 pub unsafe fn draw_box_tex(matrix: Matrix4<f32>, rect: Rectangle) {
     let tex_shader_ref = TEX_SHADER.lock().unwrap();
     let tex_shader = tex_shader_ref.as_ref().unwrap();
